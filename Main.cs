@@ -1,28 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 
 /*      *      *      *      *      *      *      *      *      *      *      */
 /*                       Get asynchronous tasks started                       */
 /*      *      *      *      *      *      *      *      *      *      *      */
 var task1 = new Interruptable {
-	InnerLoop = (t) => {
-		t.ColourOn();
+	InnerLoop = (task) => {
+		task.ColourOn();
 		Console.WriteLine(DateTime.Now.ToString("HH:mm:ss.fff"));
-		t.ColourReset();
-		Thread.Sleep(333);
+		task.ColourReset();
 	},
-	ForegroundColour=ConsoleColor.Green
+	CycleTime = 333,
+	ForegroundColour = ConsoleColor.Green
 };
 
-var task2 = new Interruptable{
-	InnerLoop= (t) => {
-		t.ColourOn();
-		Console.WriteLine("\t\t"+DateTime.Now.ToString("HH:mm:ss.fff"));
-		t.ColourReset();
-		Thread.Sleep(555);
+var task2 = new Interruptable {
+	InnerLoop = (task) => {
+		task.ColourOn();
+		Console.WriteLine("\t\t" + DateTime.Now.ToString("HH:mm:ss.fff"));
+		task.ColourReset();
 	},
+	CycleTime = 555,
 	ForegroundColour = ConsoleColor.Red
 };
 

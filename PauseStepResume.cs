@@ -3,11 +3,16 @@ using System.Threading.Tasks;
 
 namespace Omnibus.Threading.Tasks {
 	public abstract class PauseStepResume {
-		public void Pause() => IsPaused = true;
+
+		public void Pause() {
+			IsPaused = true;
+			//CancelCycle();
+		}
 		public void SingleStep() {
-			CancelPause();
 			IsPaused = true;
 			IsSingleStep = true;
+			CancelPause();
+			//CancelCycle();
 		}
 		public void Resume() {
 			CancelPause();
@@ -16,14 +21,23 @@ namespace Omnibus.Threading.Tasks {
 		}
 		public void Abort() {
 			IsAbort = true;
+			//CancelCycle();
 			CancelPause();
 		}
 		public async Task<bool> IfPaused() {
-			if (IsSingleStep) IsSingleStep = false;
 			if (IsPaused) {
-				TokenSource?.Dispose();
-				TokenSource = new();
-				await Indefinitely(TokenSource);
+				PauseTokenSource?.Dispose();
+				PauseTokenSource = new();
+				await Indefinitely(PauseTokenSource);
+			}
+			if (IsSingleStep) {
+				IsSingleStep = false;
+			} else {
+				//IsCycling = true;
+				//CycleTokenSource?.Dispose();
+				//CycleTokenSource = new();
+				await Task.Delay(CycleTime);//, CycleTokenSource.Token
+				//IsCycling = false;
 			}
 			return !IsAbort;
 		}
@@ -40,13 +54,19 @@ namespace Omnibus.Threading.Tasks {
 			};
 
 		private void CancelPause() {
-			if (IsPaused) TokenSource?.Cancel();
+			if (IsPaused) PauseTokenSource?.Cancel();
 		}
+		//private void CancelCycle() {
+		//	if (IsCycling) CycleTokenSource?.Cancel();
+		//}
 
-		private CancellationTokenSource TokenSource { get; set; }
+		private CancellationTokenSource PauseTokenSource { get; set; }
+		//private CancellationTokenSource CycleTokenSource { get; set; }
 		private bool IsPaused { get; set; }
 		private bool IsSingleStep { get; set; }
 		private bool IsAbort { get; set; }
+		//private bool IsCycling { get; set; }
+		public int CycleTime { get; init; }
 
 	}
 }
