@@ -1,29 +1,49 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 /*      *      *      *      *      *      *      *      *      *      *      */
-/*                       Get asynchronous task started                        */
+/*                       Get asynchronous tasks started                       */
 /*      *      *      *      *      *      *      *      *      *      *      */
-var task = new Interruptable(innerLoop: () => {
-	Console.WriteLine(DateTime.Now.ToString("HH:mm:ss.fff"));
-	Thread.Sleep(333);
-});
+var task1 = new Interruptable {
+	InnerLoop = (t) => {
+		t.ColourOn();
+		Console.WriteLine(DateTime.Now.ToString("HH:mm:ss.fff"));
+		t.ColourReset();
+		Thread.Sleep(333);
+	},
+	ForegroundColour=ConsoleColor.Green
+};
 
-task.Start();
+var task2 = new Interruptable{
+	InnerLoop= (t) => {
+		t.ColourOn();
+		Console.WriteLine("\t\t"+DateTime.Now.ToString("HH:mm:ss.fff"));
+		t.ColourReset();
+		Thread.Sleep(555);
+	},
+	ForegroundColour = ConsoleColor.Red
+};
+
+var tasks = new List<Interruptable> { task1, task2 };
+tasks.ForEach(task => task.Start());
 /*      *      *      *      *      *      *      *      *      *      *      */
 
 
 /*      *      *      *      *      *      *      *      *      *      *      */
 /*                   Control asynchronous task via console                    */
 /*      *      *      *      *      *      *      *      *      *      *      */
-Console.WriteLine("Command keys: " + new { p = "Pause", r = "Resume", s = "SingleStep", a = "Abort", x = "Exit", });
+Console.WriteLine("Command keys: " + new { p = "Pause", r = "Resume", s = "SingleStep", a = "Abort", c = "Cycle", x = "Exit", });
 
+var selectedTask = 0;
 while (true) {
 	Action action = Console.ReadKey(intercept: true).KeyChar switch {
-		'p' => task.Pause,
-		'r' => task.Resume,
-		's' => task.SingleStep,
-		'a' => task.Abort,
+		'p' => tasks[selectedTask].Pause,
+		'r' => tasks[selectedTask].Resume,
+		's' => tasks[selectedTask].SingleStep,
+		'a' => tasks[selectedTask].Abort,
+		'c' => () => { selectedTask = ++selectedTask % tasks.Count; },
 		'x' => () => { Environment.Exit(0); },
 		_ => default,
 	};
