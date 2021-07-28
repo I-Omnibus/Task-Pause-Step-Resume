@@ -5,7 +5,7 @@ using System.Collections.Generic;
 /*                       Get asynchronous tasks started                       */
 /*      *      *      *      *      *      *      *      *      *      *      */
 var task1 = new Interruptable {
-	InnerLoop = (task) => {
+	Loop = (task) => {
 		task.ColourOn();
 		Console.WriteLine(DateTime.Now.ToString("HH:mm:ss.fff"));
 		task.ColourReset();
@@ -15,7 +15,7 @@ var task1 = new Interruptable {
 };
 
 var task2 = new Interruptable {
-	InnerLoop = (task) => {
+	Loop = (task) => {
 		task.ColourOn();
 		Console.WriteLine("\t\t" + DateTime.Now.ToString("HH:mm:ss.fff"));
 		task.ColourReset();
@@ -45,6 +45,7 @@ while (true) {
 		'x' => () => { Environment.Exit(0); },
 		_ => default,
 	};
+	Console.Beep(frequency: 4095, duration: 7);
 	action?.Invoke();
 }
 /*      *      *      *      *      *      *      *      *      *      *      */

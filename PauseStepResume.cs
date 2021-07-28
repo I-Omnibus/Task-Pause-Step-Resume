@@ -1,18 +1,21 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Omnibus.Threading.Tasks {
-	public abstract class PauseStepResume {
+	public abstract partial class PauseStepResume {
+
+		partial void DebugPause(bool start = true);
+		partial void DebugCycle(bool start = true);
 
 		public void Pause() {
+			DebugPause();
 			IsPaused = true;
-			//CancelCycle();
 		}
 		public void SingleStep() {
 			IsPaused = true;
 			IsSingleStep = true;
 			CancelPause();
-			//CancelCycle();
 		}
 		public void Resume() {
 			CancelPause();
@@ -21,7 +24,6 @@ namespace Omnibus.Threading.Tasks {
 		}
 		public void Abort() {
 			IsAbort = true;
-			//CancelCycle();
 			CancelPause();
 		}
 		public async Task<bool> IfPaused() {
@@ -29,15 +31,16 @@ namespace Omnibus.Threading.Tasks {
 				PauseTokenSource?.Dispose();
 				PauseTokenSource = new();
 				await Indefinitely(PauseTokenSource);
+				DebugPause(start: false);
 			}
 			if (IsSingleStep) {
 				IsSingleStep = false;
 			} else {
-				//IsCycling = true;
-				//CycleTokenSource?.Dispose();
-				//CycleTokenSource = new();
-				await Task.Delay(CycleTime);//, CycleTokenSource.Token
-				//IsCycling = false;
+
+				DebugCycle();
+				await Task.Delay(CycleTime);
+				DebugCycle(start: false);
+
 			}
 			return !IsAbort;
 		}
@@ -56,17 +59,14 @@ namespace Omnibus.Threading.Tasks {
 		private void CancelPause() {
 			if (IsPaused) PauseTokenSource?.Cancel();
 		}
-		//private void CancelCycle() {
-		//	if (IsCycling) CycleTokenSource?.Cancel();
-		//}
 
 		private CancellationTokenSource PauseTokenSource { get; set; }
-		//private CancellationTokenSource CycleTokenSource { get; set; }
+
 		private bool IsPaused { get; set; }
 		private bool IsSingleStep { get; set; }
 		private bool IsAbort { get; set; }
-		//private bool IsCycling { get; set; }
 		public int CycleTime { get; init; }
+		public static readonly object Interlock = new();
 
 	}
 }

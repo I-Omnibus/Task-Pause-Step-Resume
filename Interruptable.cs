@@ -14,25 +14,26 @@ class Interruptable : PauseStepResume {
 		/*                Pause, Resume, Single step inner loop                */
 		/*      *      *      *      *      *      *      *      *      *      */
 		while (await IfPaused()) {
-			await InnerLoopTask;
+			await LoopTask;
 		}
 		/*      *      *      *      *      *      *      *      *      *      */
 
 		Say($"{nameof(Interruptable)}: ...Finished");
 	}
 
-	private Task InnerLoopTask { 
-		get=> Task.Factory.StartNew(() => InnerLoop(this)); 
+	private Task LoopTask {
+		get => Task.Factory.StartNew(() => Loop(this));
 	}
-	public Interruptable(Action<Interruptable> innerLoop) => InnerLoop = innerLoop;
-	public Interruptable() { }
-	public Action<Interruptable> InnerLoop { get; init; } = (_) => { throw new ArgumentException("Missing property:", nameof(InnerLoop)); };
+
+	public Action<Interruptable> Loop { get; init; } = (_) => { throw new ArgumentException("Missing property:", nameof(Loop)); };
 	public ConsoleColor ForegroundColour { get; init; } = ConsoleColor.White;
 	public void ColourOn() => Console.ForegroundColor = ForegroundColour;
 	public void ColourReset() => Console.ForegroundColor = ConsoleColor.White;
 	private void Say(string narrative) {
-		ColourOn();
-		Console.WriteLine(narrative);
-		ColourReset();
+		lock (Interlock) {
+			ColourOn();
+			Console.WriteLine(narrative);
+			ColourReset();
+		}
 	}
 }
